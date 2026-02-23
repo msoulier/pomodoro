@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 
 // minutes
@@ -7,14 +7,41 @@ let work_time = ref(25);
 let rest_time = ref(5);
 
 // seconds
-let countdown = ref(0);
+let work_countdown = ref(0);
+let rest_countdown = ref(0);
 
 let work_count_job = null;
 let rest_count_job = null;
 
+let work_countdown_minutes = computed(() => {
+    return parseInt(work_countdown.value / 60);
+});
+
+let work_countdown_seconds = computed(() => {
+    return work_countdown.value - parseInt(work_countdown.value / 60)*60;
+});
+
+let rest_countdown_minutes = computed(() => {
+    return parseInt(rest_countdown.value / 60);
+});
+
+let rest_countdown_seconds = computed(() => {
+    return rest_countdown.value - parseInt(rest_countdown.value / 60)*60;
+});
+
+function toggle() {
+    if (work_count_job !== null) {
+        stop();
+        rest();
+    } else {
+        stop();
+        start();
+    }
+}
+
 function work_count() {
-    countdown--;
-    if (countdown <= 1) {
+    work_countdown.value--;
+    if (work_countdown.value <= 1) {
         alert("Stop working, get up and move around");
         rest();
     } else {
@@ -23,8 +50,8 @@ function work_count() {
 }
 
 function rest_count() {
-    countdown--;
-    if (countdown <= 1) {
+    rest_countdown.value--;
+    if (rest_countdown.value <= 1) {
         alert("Start working, rest time is over");
         start();
     } else {
@@ -37,7 +64,6 @@ function rest() {
         clearTimeout(rest_count_job);
         rest_count_job = null;
     }
-    countdown = rest_time * 60;
     rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
 }
 
@@ -46,7 +72,6 @@ function start() {
         clearTimeout(work_count_job);
         work_count_job = null;
     }
-    countdown = work_time * 60;
     work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
 }
 
@@ -62,8 +87,17 @@ function stop() {
 }
 
 function reset() {
-    countdown = work_time * 60;
+    work_countdown.value = work_time.value * 60;
+    rest_countdown.value = rest_time.value * 60;
 }
+
+function init() {
+    reset();
+}
+
+onMounted(() => {
+    reset();
+});
 
 </script>
 
@@ -82,7 +116,7 @@ function reset() {
                             Time between breaks
                         </div>
                         <div class="col-6">
-                            <select v-model="work_time">
+                            <select v-model="work_time" @change="reset()">
                                 <option value="5">5 min</option>
                                 <option value="10">10 min</option>
                                 <option value="15">15 min</option>
@@ -97,7 +131,7 @@ function reset() {
                             Break time
                         </div>
                         <div class="col-6">
-                            <select v-model="rest_time">
+                            <select v-model="rest_time" @change="reset()">
                                 <option value="5">5 min</option>
                                 <option value="10">10 min</option>
                                 <option value="15">15 min</option>
@@ -113,20 +147,29 @@ function reset() {
                             <button type="button"
                                     @click="start()"
                                     class="btn btn-outline-secondary">Start</button>
-                            <span class="px-4"></span>
+                            <span class="px-2"></span>
                             <button type="button"
                                     @click="stop()"
                                     class="btn btn-outline-secondary">Stop</button>
-                            <span class="px-4"></span>
+                            <span class="px-2"></span>
                             <button type="button"
                                     @click="reset()"
                                     class="btn btn-outline-secondary">Reset</button>
+                            <span class="px-2"></span>
+                            <button type="button"
+                                    @click="toggle()"
+                                    class="btn btn-outline-secondary">Toggle</button>
                         </div>
                     </div>
                     <div class="row">
                         <div class="h-100 p-5 bg-body-tertiary border rounded-3">
                             <h2>Countdown</h2>
-                                <p>{{ countdown }} seconds</p>
+                            <div class="row">
+                                <p>Work: {{ work_countdown_minutes }} minutes, {{ work_countdown_seconds }} seconds remaining <span class="badge text-bg-secondary" v-if="work_count_job !== null">Running</span></p>
+                            </div>
+                            <div class="row">
+                                <p>Rest: {{ rest_countdown_minutes }} minutes, {{ rest_countdown_seconds }} seconds remaining <span class="badge text-bg-secondary" v-if="rest_count_job !== null">Running</span></p>
+                            </div>
                         </div>
                     </div>
                 </form>
