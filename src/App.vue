@@ -2,158 +2,135 @@
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 
-const greetMsg = ref("");
-const name = ref("");
+// minutes
+let work_time = ref(25);
+let rest_time = ref(5);
 
-let counter = 25;
+// seconds
+let countdown = ref(0);
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  greetMsg.value = await invoke("greet", { name: name.value });
+let work_count_job = null;
+let rest_count_job = null;
+
+function work_count() {
+    countdown--;
+    if (countdown <= 1) {
+        alert("Stop working, get up and move around");
+        rest();
+    } else {
+        work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
+    }
 }
+
+function rest_count() {
+    countdown--;
+    if (countdown <= 1) {
+        alert("Start working, rest time is over");
+        start();
+    } else {
+        rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
+    }
+}
+
+function rest() {
+    if (rest_count_job !== null) {
+        clearTimeout(rest_count_job);
+        rest_count_job = null;
+    }
+    countdown = rest_time * 60;
+    rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
+}
+
+function start() {
+    if (work_count_job !== null) {
+        clearTimeout(work_count_job);
+        work_count_job = null;
+    }
+    countdown = work_time * 60;
+    work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
+}
+
+function stop() {
+    if (work_count_job !== null) {
+        clearTimeout(work_count_job);
+        work_count_job = null;
+    }
+    if (rest_count_job !== null) {
+        clearTimeout(rest_count_job);
+        rest_count_job = null;
+    }
+}
+
+function reset() {
+    countdown = work_time * 60;
+}
+
 </script>
 
 <template>
-  <main class="container">
-      <h1>Going to be a Pomodoro app</h1>
+    <main class="container">
+        <div class="row">
+            <h1>Pomodoro: Get off your ass regularly</h1>
+        </div>
+        <div class="row">&nbsp;</div>
+        <div class="row">
+            <div class="container-fluid">
+                <form>
 
-    <form class="row" @submit.prevent="greet">
-
-        Time between breaks
-      <select v-model="counter">
-          <option value="5">5 min</option>
-          <option value="10">10 min</option>
-          <option value="15">15 min</option>
-          <option value="20">20 min</option>
-          <option value="25">25 min</option>
-          <option value="30">30 min</option>
-      </select>
-      <button type="submit">Start</button>
-
-    </form>
-    <p>{{ greetMsg }}</p>
-  </main>
+                    <div class="row">
+                        <div class="col-6 bg-body-tertiary border rounded-3">
+                            Time between breaks
+                        </div>
+                        <div class="col-6">
+                            <select v-model="work_time">
+                                <option value="5">5 min</option>
+                                <option value="10">10 min</option>
+                                <option value="15">15 min</option>
+                                <option value="20">20 min</option>
+                                <option value="25">25 min</option>
+                                <option value="30">30 min</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-6 bg-body-tertiary border rounded-3">
+                            Break time
+                        </div>
+                        <div class="col-6">
+                            <select v-model="rest_time">
+                                <option value="5">5 min</option>
+                                <option value="10">10 min</option>
+                                <option value="15">15 min</option>
+                                <option value="20">20 min</option>
+                                <option value="25">25 min</option>
+                                <option value="30">30 min</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row p-4">
+                        <div class="col-6"></div>
+                        <div class="col-6">
+                            <button type="button"
+                                    @click="start()"
+                                    class="btn btn-outline-secondary">Start</button>
+                            <span class="px-4"></span>
+                            <button type="button"
+                                    @click="stop()"
+                                    class="btn btn-outline-secondary">Stop</button>
+                            <span class="px-4"></span>
+                            <button type="button"
+                                    @click="reset()"
+                                    class="btn btn-outline-secondary">Reset</button>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                            <h2>Countdown</h2>
+                                <p>{{ countdown }} seconds</p>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
 </template>
-
-<style scoped>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #249b73);
-}
-
-</style>
-<style>
-:root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
-
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-.container {
-  margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
-}
-
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
-}
-
-.row {
-  display: flex;
-  justify-content: center;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  text-align: center;
-}
-
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color: #f6f6f6;
-    background-color: #2f2f2f;
-  }
-
-  a:hover {
-    color: #24c8db;
-  }
-
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
-  }
-}
-
-</style>
