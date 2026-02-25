@@ -41,8 +41,10 @@ function toggle() {
 
 function work_count() {
     work_countdown.value--;
-    if (work_countdown.value <= 1) {
+    if (work_countdown.value < 1) {
         alert("Stop working, get up and move around");
+        stop();
+        reset();
         rest();
     } else {
         work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
@@ -51,8 +53,10 @@ function work_count() {
 
 function rest_count() {
     rest_countdown.value--;
-    if (rest_countdown.value <= 1) {
+    if (rest_countdown.value < 1) {
         alert("Start working, rest time is over");
+        stop();
+        reset();
         start();
     } else {
         rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
@@ -165,10 +169,10 @@ onMounted(() => {
                         <div class="h-100 p-5 bg-body-tertiary border rounded-3">
                             <h2>Countdown</h2>
                             <div class="row">
-                                <p>Work: {{ work_countdown_minutes }} minutes, {{ work_countdown_seconds }} seconds remaining <span class="badge text-bg-secondary" v-if="work_count_job !== null">Running</span></p>
+                                <p>Work: {{ work_countdown_minutes }} minutes, {{ work_countdown_seconds }} second<span v-if="work_countdown_seconds !== 1">s</span> remaining <span class="badge text-bg-secondary" v-if="work_count_job !== null">Running</span></p>
                             </div>
                             <div class="row">
-                                <p>Rest: {{ rest_countdown_minutes }} minutes, {{ rest_countdown_seconds }} seconds remaining <span class="badge text-bg-secondary" v-if="rest_count_job !== null">Running</span></p>
+                                <p>Rest: {{ rest_countdown_minutes }} minutes, {{ rest_countdown_seconds }} second<span v-if="rest_countdown_seconds !== 1">s</span> remaining <span class="badge text-bg-secondary" v-if="rest_count_job !== null">Running</span></p>
                             </div>
                         </div>
                     </div>
