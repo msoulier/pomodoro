@@ -1,6 +1,15 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from '@tauri-apps/plugin-notification';
+// when using `"withGlobalTauri": true`, you may use
+// const { isPermissionGranted, requestPermission, sendNotification, } = window.__TAURI__.notification;
+
+let permissionGranted = false;
 
 // minutes
 let work_time = ref(25);
@@ -10,8 +19,8 @@ let rest_time = ref(5);
 let work_countdown = ref(0);
 let rest_countdown = ref(0);
 
-let work_count_job = null;
-let rest_count_job = null;
+let work_count_job = ref(null);
+let rest_count_job = ref(null);
 
 let work_countdown_minutes = computed(() => {
     return parseInt(work_countdown.value / 60);
@@ -30,63 +39,75 @@ let rest_countdown_seconds = computed(() => {
 });
 
 function toggle() {
-    if (work_count_job !== null) {
+    if (work_count_job.value !== null) {
         stop();
         rest();
     } else {
         stop();
         start();
+    }
+}
+
+function send_notification(title, body) {
+    if (permissionGranted) {
+        sendNotification({ title: title, body: body });
+    } else {
+        alert("Notifications are disabled");
     }
 }
 
 function work_count() {
     work_countdown.value--;
     if (work_countdown.value < 1) {
-        alert("Stop working, get up and move around");
+        send_notification("Time's up", "Stop working, get up and move around");
         stop();
         reset();
         rest();
     } else {
-        work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
+        work_count_job.value = setTimeout(function() { work_count(); }.bind(this), 1000);
     }
 }
 
 function rest_count() {
     rest_countdown.value--;
     if (rest_countdown.value < 1) {
-        alert("Start working, rest time is over");
+        send_notification("Time's up", "Start working, rest time is over");
         stop();
         reset();
         start();
     } else {
-        rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
+        rest_count_job.value = setTimeout(function() { rest_count(); }.bind(this), 1000);
     }
 }
 
 function rest() {
-    if (rest_count_job !== null) {
-        clearTimeout(rest_count_job);
-        rest_count_job = null;
+    if (rest_count_job.value !== null) {
+        clearTimeout(rest_count_job.value);
+        rest_count_job.value = null;
     }
-    rest_count_job = setTimeout(function() { rest_count(); }.bind(this), 1000);
+    rest_count_job.value = setTimeout(function() { rest_count(); }.bind(this), 1000);
 }
 
-function start() {
-    if (work_count_job !== null) {
-        clearTimeout(work_count_job);
-        work_count_job = null;
+async function start() {
+    if (!permissionGranted) {
+        let permission = await requestPermission();
+        permissionGranted = permission === 'granted';
     }
-    work_count_job = setTimeout(function() { work_count(); }.bind(this), 1000);
+    if (work_count_job.value !== null) {
+        clearTimeout(work_count_job.value);
+        work_count_job.value = null;
+    }
+    work_count_job.value = setTimeout(function() { work_count(); }.bind(this), 1000);
 }
 
 function stop() {
-    if (work_count_job !== null) {
-        clearTimeout(work_count_job);
-        work_count_job = null;
+    if (work_count_job.value !== null) {
+        clearTimeout(work_count_job.value);
+        work_count_job.value = null;
     }
-    if (rest_count_job !== null) {
-        clearTimeout(rest_count_job);
-        rest_count_job = null;
+    if (rest_count_job.value !== null) {
+        clearTimeout(rest_count_job.value);
+        rest_count_job.value = null;
     }
 }
 
@@ -96,10 +117,13 @@ function reset() {
 }
 
 function init() {
+// If not we need to request it
     reset();
 }
 
-onMounted(() => {
+onMounted(async () => {
+    // Do you have permission to send a notification?
+    permissionGranted = await isPermissionGranted();
     reset();
 });
 
