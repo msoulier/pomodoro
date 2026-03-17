@@ -142,7 +142,7 @@ onMounted(async () => {
 
                     <div class="row">
                         <div class="col-6 bg-body-tertiary border rounded-3">
-                            Time between breaks
+                            Work time
                         </div>
                         <div class="col-6">
                             <select v-model="work_time" @change="reset()">
@@ -170,9 +170,8 @@ onMounted(async () => {
                             </select>
                         </div>
                     </div>
-                    <div class="row p-4">
-                        <div class="col-6"></div>
-                        <div class="col-6">
+                    <div class="row p-3">
+                        <div class="col-12">
                             <button type="button"
                                     @click="start()"
                                     class="btn btn-outline-secondary">Start</button>
@@ -191,7 +190,7 @@ onMounted(async () => {
                         </div>
                     </div>
                     <div class="row">
-                        <div class="h-100 p-5 bg-body-tertiary border rounded-3">
+                        <div class="h-100 p-3 bg-body-tertiary border rounded-3">
                             <h2>Countdown</h2>
                             <div class="row">
                                 <p>Work: {{ work_countdown_minutes }} minutes, {{ work_countdown_seconds }} second<span v-if="work_countdown_seconds !== 1">s</span> remaining <span class="badge text-bg-secondary" v-if="work_count_job !== null">Running</span></p>
