@@ -124,6 +124,7 @@ function init() {
 onMounted(async () => {
     // Do you have permission to send a notification?
     permissionGranted = await isPermissionGranted();
+    console.log("permissionGranted is " + permissionGranted);
     reset();
 });
 
